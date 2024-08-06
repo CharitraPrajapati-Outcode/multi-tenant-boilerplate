@@ -1,0 +1,92 @@
+volumes:
+  dbdata:
+  rddata:
+  celerydata:
+  locals3root:
+
+networks:
+  backend:
+    driver: bridge
+
+services:
+  api:
+    restart: always
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/my-project
+    env_file: .env
+    command: >
+      sh -c "python manage.py wait_for_db && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --reload"
+    container_name: project_api
+    depends_on:
+      - db
+      - s3
+    networks:
+      - backend
+
+  db:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB=db_name
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+    container_name: project_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data/
+    networks:
+      - backend
+
+  redis:
+    image: redis:alpine
+    command: redis-server
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+    volumes:
+      - rddata:/var/lib/redis
+    container_name: project_redis
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    container_name: project_celery
+    env_file: .env
+    depends_on:
+      - redis
+      - api
+    networks:
+      - backend
+    volumes:
+      - celerydata:/var/lib/celery
+
+  mail:
+    image: mailhog/mailhog
+    container_name: project_mail
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - backend
+
+  s3:
+    image: adobe/s3mock
+    container_name: project_s3
+    ports:
+      - "9090:9090"
+      - "9191:9191"
+    networks:
+      - backend
+    volumes:
+      - ./locals3root:/containers3root
+    environment:
+      - debug=true
+      - retainFilesOnExit=true
+      - root=containers3root
+      - initialBuckets=my_bucket
