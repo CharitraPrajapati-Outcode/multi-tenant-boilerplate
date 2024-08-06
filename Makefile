@@ -118,6 +118,11 @@ create_schema:
 remove_schema:
 	docker compose exec api python manage.py delete_schema
 
+# collect static
+.PHONY: collectstatic
+collectstatic:
+	docker compose exec api python manage.py collectstatic
+
 # # run test
 .PHONY: test
 test := test
