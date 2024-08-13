@@ -10,7 +10,7 @@ networks:
 
 services:
   api:
-    restart: always
+    # restart: always
     build: 
       context: .
       dockerfile: Dockerfile
