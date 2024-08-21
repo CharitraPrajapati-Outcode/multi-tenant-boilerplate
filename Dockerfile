@@ -10,20 +10,23 @@ RUN apk update \
 
 RUN adduser -D -u 1000 -g 1000 my-user
 
-# Create the directory if it doesn't exist
-RUN mkdir -p /my-project/logs
-RUN touch /my-project/logs/error.log
-RUN touch /my-project/logs/django_request.log
+# Ensure the directory exists and has the correct permissions
+RUN mkdir -p /my-user/logs \
+    && chown -R my-user:my-user /my-user/logs \
+    && chmod -R 755 /my-user/logs
 
-# Change ownership to the user running the application (replace 'myuser' with the actual user)
-RUN chown -R my-user:my-user /my-project/logs
+# Now create the log file with correct ownership and permissions
+RUN touch /my-user/logs/error.log \
+    && chown my-user:my-user /my-user/logs/error.log \
+    && chmod 644 /my-user/logs/error.log
 
-# Set proper permissions
-RUN chmod -R 755 /my-project/logs
+RUN chmod -R 775 /my-user/logs
 
-# Set permissions for the existing log files
-RUN chmod 644 /my-project/logs/error.log
-RUN chmod 644 /my-project/logs/django_request.log
+RUN mkdir -p /my-user/logs \
+    && touch /my-user/logs/error.log \
+    && chown -R my-user:my-user /my-user/logs \
+    && chmod -R 775 /my-user/logs
+
 
 ENV APP_DIR /home/my-user
 ENV HOME /home/my-user
@@ -32,11 +35,11 @@ ENV PATH "$PATH:/home/my-user/.local/bin"
 
 USER my-user
 
-WORKDIR /my-project
+WORKDIR /my-user
 
-ADD requirements.txt my-project/
+ADD requirements.txt my-user/
 
 RUN --mount=type=cache,target=/root/.cache \
-    pip install -r my-project/requirements.txt
+    pip install -r my-user/requirements.txt
 
-COPY ./ /my-project
+COPY ./ /my-user

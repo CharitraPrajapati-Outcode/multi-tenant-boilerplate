@@ -5,6 +5,10 @@ from apps.tenant.models import Tenant, Domain
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
+        if Tenant.objects.filter(schema_name='public').exists():
+            print('Default schema already loaded!')
+            return
+
         tenant = Tenant(schema_name='public',  name='My Project', is_active=True)
         tenant.save()
 

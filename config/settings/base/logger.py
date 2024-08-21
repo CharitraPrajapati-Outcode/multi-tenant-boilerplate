@@ -1,6 +1,4 @@
-import logging
-import logging.handlers
-
+# Logging configurations
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -16,7 +14,7 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': 'logs/error.log',
             'when': 'midnight',
-            'backupCount': 20,
+            'backupCount': 20,  # max file before override
             'formatter': 'standard',
         },
         'request_handler': {
@@ -24,25 +22,25 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': 'logs/django_request.log',
             'when': 'midnight',
-            'backupCount': 20,
+            'backupCount': 20,  # max file before override
             'formatter': 'standard',
         },
     },
     'root': {
         'handlers': ['default'],
         'level': 'DEBUG',
-        'propagate': True,
+        'propagate': True
     },
     'loggers': {
-        '': {
+        '': {  # for default logging setup
             'handlers': ['default'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': True
         },
         'django.request': {
             'handlers': ['request_handler'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': True
         },
     }
 }

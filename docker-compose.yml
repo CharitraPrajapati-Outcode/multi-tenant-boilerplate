@@ -36,11 +36,17 @@ services:
       - POSTGRES_PASSWORD=admin
     container_name: project_db
     ports:
-      - "5434:5432"
+      - "5434:5432" # Here, 5434 is the host port and 5432 is the container port. Always use the host port to connect to the database. But, the container port is used to connect to the database from the container.
     volumes:
       - dbdata:/var/lib/postgresql/data/
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_name"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
 
   redis:
     image: redis:alpine
