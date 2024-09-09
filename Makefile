@@ -108,6 +108,11 @@ load_default_schema:
 createsuperuser:
 	docker compose exec api python manage.py createsuperuser
 
+# list schema
+.PHONY: list_schema
+list_schema:
+	docker compose exec api python manage.py list_schema
+
 # create schema
 .PHONY: create_schema
 create_schema:

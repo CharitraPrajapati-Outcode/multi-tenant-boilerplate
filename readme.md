@@ -13,44 +13,86 @@ This project is a multi-tenant Django application using the `django-tenants` pac
 
 ## Getting Started
 
-### Prerequisites
+## Prerequisites
 
-- Python 3.x
-- Docker and Docker Compose
-- PostgreSQL
+- Docker and Docker Compose installed on your local machine
+- Git
+- AWS account (for deployment)
+- Python 3.8+ (for running the app locally without Docker)
 
-### Installation
+## Installation
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://your-repository-url.git
-   cd your-project-directory
-    ```
+1. **Clone the Repository**
 
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-    ```
-
-3. **Environment Configuration**
     ```bash
-    cp .env.example .env
+    git clone https://your-repo-url.git
+    cd your-repo-name
     ```
 
-## Project Setup
+2. **Set Up Environment Variables**
 
-### Initial Database Setup
+   Create a `.env` file in the project root with the necessary environment variables:
 
-1. **Run Initial Migrations**
+    ```plaintext
+    DEBUG=True
+    SECRET_KEY=your_secret_key
+    POSTGRES_DB=project_db
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=admin
+    ALLOWED_HOSTS=localhost,127.0.0.1
+    ```
+
+3. **Build and Start the Containers**
+
     ```bash
-    python manage.py migrate_schemas --shared
+    docker-compose up --build
     ```
 
-2. **Make Migrations for Your Apps**
+4. **Initiate the Database**
+
     ```bash
-    python manage.py makemigrations
-    python manage.py migrate_schemas --shared
+    docker-compose exec db createdb -U postgres project_db
     ```
+
+5. **Load default schema, Apply Migrations and Create Superuser**
+
+    ```bash
+    docker-compose exec api python manage.py load_default_schema
+    docker-compose exec api python manage.py migrate
+    docker-compose exec api python manage.py createsuperuser
+    ```
+
+6. **Collect Static Files**
+
+    ```bash
+    docker-compose exec api python manage.py collectstatic --noinput
+    ```
+
+7. **Load default data**
+
+    ```bash
+    docker compose -f ./docker-compose.stage.yml exec api python manage.py load_super_admin
+    ```
+
+8. **Migrate specific schema**
+
+    ```bash
+    docker-compose exec api python manage.py migrate _schemas --schema <schema_name>
+    ```
+
+9. **Migrate shared schema**
+
+    ```bash
+    docker-compose exec api python manage.py migrate_schemas --schema shared
+    ```
+
+## Running the Application
+
+The application is accessible via `http://localhost:8000` after running the Docker containers. You can access the admin panel at `http://localhost:8000/admin` with the superuser credentials.
+
+- **API Documentation**: Available via the DRF browsable API interface. `http://localhost:8000/api/swagger/`
+- **Mailhog Interface**: Accessible via `http://localhost:8025` for testing emails.
+
 
 ## Running the Project
 
@@ -60,23 +102,20 @@ This project is a multi-tenant Django application using the `django-tenants` pac
     source ./entrypoint.sh
     ```
 
-### Running the project
 
-    ```bash
-    Run `docker compose up` to start the project.
-    ```
+## Testing
 
-### Running the migrations
+To run the test suite, use the following command:
 
-    ```bash
-    Run `docker compose exec api python manage.py migrate` to run the migrations.
-    ```
+```bash
+docker-compose exec api python manage.py test
+```
 
-### Creating a superuser
+To run specific tests, run the following command
 
-    ```bash
-    Run `docker compose exec api python manage.py createsuperuser` to create a superuser.
-    ```
+```bash
+docker compose exec api python manage.py test apps.<app_name>.tests.<test_file_name>
+```
 
 ## Managing Tenants
 
@@ -92,22 +131,27 @@ This project is a multi-tenant Django application using the `django-tenants` pac
     docker compose exec api python manage.py delete_schema
     ```
 
-3. **Creating a Super Admin for a Tenant**
+3. **List all Tenants**
+    ```bash
+    docker compose exec api python manage.py list_schemas
+    ```
+
+4. **Creating a Super Admin for a Tenant**
     ```bash
     docker compose exec api python manage.py create_tenant_superuser --email=<email> --schema=<schema_name>
     ```
 
-4. **Migrating Specific Schema**
+5. **Migrating Specific Schema**
     ```bash
     docker compose exec api python manage.py migrate_schemas --schema=<schema_name>
     ```
 
-5. **Migrating User Roles on Tenant Schema**
+6. **Migrating User Roles on Tenant Schema**
     ```bash
     python manage.py tenant_command load_user_groups --schema=<schema_name>
     ```
 
-6. **Creating Objects within a Specific Tenant**
+7. **Creating Objects within a Specific Tenant**
     ```python
     from django_tenants.utils import schema_context
 
@@ -121,7 +165,7 @@ This project is a multi-tenant Django application using the `django-tenants` pac
 - [Django Tenants](https://django-tenants.readthedocs.io/en/latest/index.html)
 
 
-## Extra
+## Additional Information
 
 For multi-tanent
 https://django-tenants.readthedocs.io/en/latest/index.html
@@ -139,25 +183,9 @@ For creating tenants
 https://django-tenants.readthedocs.io/en/latest/use.html
 
 
-schema_name_my = 'mercedes'
+```python
+schema_name_my = 'test'
 from django_tenants.utils import schema_context
 with schema_context(schema_name_my):
-    p1 = Plant.objects.create(name='Test', address='Test address')
-
-
-To migrate specific schema
-``` python manage.py migrate_schemas --schema second ```
-
-migrate user roles on tenant
-``` python manage.py tenant_command load_user_groups --schema=<schema_name> ```
-
-create super admin for individual tenants
-``` docker compose exec api python manage.py create_tenant_superuser --email=<email> --schema=<schema_name> ```
-
-
-
-RUNNER_ALLOW_RUNASROOT="1"
-
-Setup Project.
-python manage.py load_default_schema
-python manage.py createsuperuser
+    p1 = Address.objects.create(name='Test', address='Test address')
+```

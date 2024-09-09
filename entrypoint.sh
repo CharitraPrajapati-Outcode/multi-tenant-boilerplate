@@ -7,7 +7,7 @@ docker compose build
 docker compose up -d
 
 # Create database named project_db if not exists
-# docker compose exec db psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'project_db'" | grep -q 1 || docker compose exec db psql -U postgres -c "CREATE DATABASE project_db;"
+docker compose exec db psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'project_db'" | grep -q 1 || docker compose exec db psql -U postgres -c "CREATE DATABASE project_db;"
 
 # Make migrations
 docker compose exec api python manage.py makemigrations
